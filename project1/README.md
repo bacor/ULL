@@ -21,3 +21,5 @@ The project consists of three big steps
 3. **Experiment**
   We have to think about this.
 
+# Notes
+Put all your notes here.
