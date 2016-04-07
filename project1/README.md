@@ -23,3 +23,7 @@ The project consists of three big steps
 
 # Notes
 Put all your notes here.
+
+## Stuff mentioned in class
+* The _base distribution_ (p43) apparently is $P_0(w=x_1, \dots, x_m) = p_#(1-p_#)^{M-1} \prod_{j=1}^M p(x_j)$ where $p(x_j)$ is uniform in the paper, but you could also use e.g. empirical distributions
+* In class, they pointed a footnote saying that they always used $\rho = 2$. 
