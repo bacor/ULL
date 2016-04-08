@@ -40,8 +40,6 @@ def decode(input_file, codebook):
 	 input_file = open(input_file, 'r')
 	 for line in input_file:
 	 	sp = line.split()
-	 	if line == 'e bi si di':
-	 		print sp
 	 	output_line = []
 	 	i = 0
 	 	for w in sp:
