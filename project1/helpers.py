@@ -1,6 +1,7 @@
 ###
 # Some helper functions
 
+import re
 from collections import Counter
 
 def clean_corpus(corpus, sep="$"):
@@ -28,8 +29,6 @@ def clean_corpus(corpus, sep="$"):
 
     return new_corpus, sorted(list(set(U)))
 
-
-
 def add_word_boundaries(corpus, boundaries, sep="."):
     """Adds word boundaries to a corpus by inserting a sepator at every boundary
     """
@@ -49,3 +48,12 @@ def get_words_counts(corpus, boundaries):
         counts[word] += 1
         prev_b = b
     return counts    
+
+def read_data(filename):
+    pattern = re.compile('\s+')
+    result_ls = []
+    with open(filename) as handle:
+        for line in handle:
+            line = re.sub(pattern, '', line)
+            result_ls.append(line)
+    return result_ls
