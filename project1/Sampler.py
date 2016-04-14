@@ -1,67 +1,61 @@
 from helpers import *
 from collections import Counter
-from FileUtils import read_data
-from Initialisation import gather_uniform_phon_probs, initialise_poisson, initialise_random
 
 def Sampler(corpus, B, U, num_iter, P0, alpha, rho):
-    """Gibbs sampler
+    """Samples word boundaries from a corpus using Gibbs-sampling.
 
     Args:
-        corpus: a very long string without utterance boundaries
-        B: list of boundary positions
+        corpus: a clean corpus, cleaned using helpers.clean_corpus
+        B: a list of initial boundary positions
+        U: a list of utterance boundary positions
         num_iter: number of iterations
-        P0: a function that takes a word and returns a probability
-        alpha: the alpha hyperparam
-        rho: the rho param
+        P0: a function that takes a word and returns its probability
+        alpha: hyperparameter
+        rho: hyperparameter
 
     Returns:
-        Returns the boundary positions
-    """
+        A list of boundary positions sampled from the posterior
 
-    # Initialize words
-    W_before = Counter()
-    W_after = get_words_counts(corpus, B)
-    total_utterances = len(U)
+    """
+    # Initialize wordcounts
+    wordcounts = get_words_counts(corpus, B)   
 
     for t in range(num_iter):
-        #         print("Starting iteration %s" % t)
-
-        # Remove first word from focus
-        W_after[corpus[:B[1]]] -= 1 
+        # Remove first word and (occasionally) all nonpositive ones
+        wordcounts[corpus[:B[1]]] -= 1 
+        if (t % 20) == 0: 
+            wordcounts += Counter()
         b_prev_index = 0
-
+        
         for b_cur in range(1,len(corpus)+1):
-            b_prev = B[b_prev_index]
-            b_next = B[b_prev_index + 1]
+            # Is b_cur on the boundary?
+            cur_is_on_boundary = (b_cur in B)
 
-            # Words/fragments in the focus
+            # Previous and next boundaries
+            b_prev = B[b_prev_index]
+            next_index = min(b_prev_index + 1 + int(cur_is_on_boundary), len(B)-1)
+            b_next = B[next_index]
+
+            # Words/fragments in the focus area
             w1 = corpus[b_prev:b_next]
             w2 = corpus[b_prev:b_cur]
             w3 = corpus[b_cur:b_next]
 
-            # Is b_cur on the boundary?
-            cur_is_on_boundary = (b_cur in B)
-
-            # We moved to a boundary, remove w3 from W_after
-            if cur_is_on_boundary:
-                W_after[w3] -= 1
-                num_words = len(B) - 3
-            else:
-                num_words = len(B) - 2
-
+            # Update wordcounts and #words in context
+            wordcounts[w3] -= int(cur_is_on_boundary)
+            num_words = len(B) - 2 - int(cur_is_on_boundary)
+                        
             # Always insert boundaries at utterance boundaries ?!?!
             if b_cur in U:
                 insert_boundary = True
 
             else:
                 # Counts of words in the focus
-                num_w1 = W_before[w1] + W_after[w1]
-                num_w2 = W_before[w2] + W_after[w2]
-                num_w3 = W_before[w3] + W_after[w3]    
-
+                num_w1 = wordcounts[w1]
+                num_w2 = wordcounts[w2]
+                num_w3 = wordcounts[w3]
                 # Is w_1 utterance final?
                 w1_is_final = (b_next in U)
-
                 # Count the number of utterences in the focus area
                 total_num_u = len(U) - 1
                 num_u_in_focus = (b_prev in U and b_prev != 0) + (w1_is_final and b_next != U[-1])
@@ -74,40 +68,42 @@ def Sampler(corpus, B, U, num_iter, P0, alpha, rho):
 
                 # Prob of inserting a boundary
                 prob_h2  = ((num_w2 + alpha * P0(w2)) / (num_words + alpha)
-                             * (num_words - total_num_u + rho/2) / (num_words + rho))
+                            * (num_words - total_num_u + rho/2) / (num_words + rho))
                 prob_h2 *= ((num_w3 + int(w2 == w3) + alpha * P0(w3)) / (num_words + 1 + alpha)
-                             * (num_u + (1 - w1_is_final) + rho/2) / (num_words + 1 + rho))
-                # We used int(w2_is_final == w1_is_final) = 1- w1_is_final
+                            * (num_u + (1 - w1_is_final) + rho/2) / (num_words + 1 + rho))
+                            # using (1-w1_is_final) = int(w2_is_final == w1_is_final)
 
-                insert_boundary = prob_h2 > prob_h1
+                insert_boundary = prob_h2 > prob_h1            
 
+                # Update the contexts
+                if cur_is_on_boundary: 
+                    if insert_boundary:
+                        wordcounts[w2] += 1
+                        b_prev_index += 1
+                    else:
+                        index = B.index(b_cur)
+                        del B[index]
 
-            # Update the contexts
-            if not cur_is_on_boundary:
-                if insert_boundary:
-                    # Insert boundary at right position (keep B ordered)
+                elif insert_boundary:
+                    # Insert boundary at the right position to keep B ordered
                     B.insert(b_prev_index + 1, b_cur)
                     b_prev_index += 1
-                    W_after[w3] -= 1
-                    W_before[w2] += 1
-                # Else: don't do anything
+                    wordcounts[w2] += 1
 
-            else: 
-                if not insert_boundary:
-                    index = B.index(b_cur)
-                    del B[index]
-                else:
-                    W_before[w2] += 1
-                    b_prev_index += 1            
-
-        # Wrap up this iteration
-        W_after = W_before
-        W_before = Counter()
-
+            # DEBUGGIN of a SMALL corpus!
+            # This prints the corpus with word boundaries,
+            # corpus2 = add_word_boundaries(corpus, sorted(B))
+            # new_B = [b+i for i,b in enumerate(B)]
+            # new_b_cur = b_cur + len([b for b in B if b < b_cur])
+            # next_context = ["%s(%s)" % (w,i) for w, i in wordcounts.items() if i>0]
+            # print(("\n%s) " % b_cur) + corpus2[:new_b_cur] + ' | ' + corpus2[new_b_cur:])
+            # print("Next context: " + " ".join(next_context))
+            
     return B
 
 
 
+    
 
 if __name__ == '__main__':
     
@@ -119,44 +115,9 @@ if __name__ == '__main__':
     # Our 'random' initialization of the boundaries with
     # utterance boundaries, no duplicates and sorted
     B = [5, 10, 12, 17, 25, 31, 36, 49]
-
-    B = [5, 16, 26, 34]
-
     B = sorted(set(B + U))
 
     P0 = lambda w: 1
     alpha = 1
     rho = 2
     print(Sampler(corpus, B, U, 4, P0, alpha, rho))
-
-
- 
-    # data is a list of strings
-    data = read_data('data\\br-phono-test.txt')
-
-    data = ['helloworld', 'helloplanet', 'byeworld', 'byeplanet']
-
-    # computes the probabilities of all phonemes and returns a function
-    # which computes the probability of a sequence based on these probabilities
-    uni_prob = gather_uniform_phon_probs(data, 0.5)
-
-    # randomly generates word boundaries
-    B = list(initialise_poisson(data, 4))
-
-    # prepare data for function 'clean_corpus'
-    data = '$'.join((line for line in data))
-
-    corpus, U = clean_corpus(data)
-
-    B = sorted(set(B + U))
-
-    # get a shallow copy of B - just to be sure that it is not canged by the sampler
-    B_copy = B[:]
-
-    result = Sampler(corpus, B, U, 10000, uni_prob, alpha, rho)
-
-    # print the data with the initial word boundaries
-    print(''.join(['_'+corpus[i] if i in B_copy else corpus[i] for i in range(len(corpus))]))
-
-    # print the data with the inferred word boundaries
-    print(''.join(['_'+corpus[i] if i in result else corpus[i] for i in range(len(corpus))]))
