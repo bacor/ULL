@@ -1,24 +1,23 @@
 from helpers import *
-from sampler import *
+from model import *
 from Initialisation import *
-
 
 if __name__ == '__main__':
     
     #### 
     ## A silly demo
+
     # Get corpus and utterance boundaries
     orig_corpus = "helloworld$hereisanicestory$helloworldnostorypleaseworld"
-    corpus, U = clean_corpus(orig_corpus)
+    
+    # The model is a class now!
+    W = WordSegmenter(orig_corpus)
+    B = W.initialize([5, 10, 12, 17, 25, 31, 36, 49])
 
-    # Our 'random' initialization of the boundaries with
-    # utterance boundaries, no duplicates and sorted
-    B = [5, 10, 12, 17, 25, 31, 36, 49]
-    B = sorted(set(B + U))
-
-    P0 = lambda w: 1
-    alpha, rho = 1, 2
-    print(Sampler(corpus, B, U, 4, P0, alpha, rho))
+    P0, alpha, rho = lambda w: 1, 1, 2
+    num_iter = 500
+    sample = W.sample(B, num_iter, P0, alpha, rho) 
+    print( sample)
 
  
     ###
