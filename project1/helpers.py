@@ -27,9 +27,14 @@ def clean_corpus(corpus, sep="$"):
     U = [U[i] - i for i in range(len(U))]
     U += [0, len(new_corpus)]
 
-    return new_corpus, sorted(list(set(U)))
+    return new_corpus, sorted(set(U))
 
 def add_word_boundaries(corpus, boundaries, sep="."):
+    print(boundaries)
+    return ''.join([sep+corpus[i] if i in boundaries and corpus[i] != "$"
+                                else corpus[i] for i in range(len(corpus))])
+
+def add_word_boundaries2(corpus, boundaries, sep="."):
     """Adds word boundaries to a corpus by inserting a sepator at every boundary
     """
     out = ""

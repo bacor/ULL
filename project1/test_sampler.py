@@ -9,21 +9,50 @@ if __name__ == '__main__':
 
     # Get corpus and utterance boundaries
     orig_corpus = "helloworld$hereisanicestory$helloworldnostorypleaseworld"
-    
+
     # The model is a class now!
     W = WordSegmenter(orig_corpus)
     B = W.initialize([5, 10, 12, 17, 25, 31, 36, 49])
 
-    P0, alpha, rho = lambda w: 1, 1, 2
-    num_iter = 500
-    sample = W.sample(B, num_iter, P0, alpha, rho) 
-    print( sample)
+    # orig_corpus = ["ait", "itis"]
 
+    orig_corpus = read_data('data\\br-phono-test.txt')
+
+    # # computes the probabilities of all phonemes and returns a function
+    # # which computes the probability of a sequence based on these probabilities
+    uni_prob = gather_unigram_phon_probs(orig_corpus, 0.5)
+
+    # # randomly generates word boundaries
+    B = list(initialise_poisson(orig_corpus, 5))
+
+    # shallow copy of B to avoid side effects
+    B_copy = B[:]
+
+    # # prepare data for WordSegmenter
+    orig_corpus = '$'.join((line for line in orig_corpus))
+
+
+    W = WordSegmenter(orig_corpus)
+    B = W.initialize(B)
+
+    print('B', B)
+
+    P0, alpha, rho = lambda w: 1, 50, 0.5
+    num_iter = 2
+    B = W.sample(B, num_iter, uni_prob, alpha, rho)
+
+    print('------------')
+
+    print(add_word_boundaries(orig_corpus, B_copy))
+
+    print('------------')
+
+    print(add_word_boundaries(orig_corpus, B))
  
     ###
     # Some more involved stuff that doesn't run at Bas's computer
 
-    # # data is a list of strings
+    # data is a list of strings
     # data = read_data('data\\br-phono-test.txt')
     # data = ['helloworld', 'helloplanet', 'byeworld', 'byeplanet']
 
