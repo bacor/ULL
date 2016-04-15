@@ -30,6 +30,7 @@ def initialise_poisson(data, word_length_factor):
         accum_start_index += len(line)
         for i in boundary_indices:
             yield i
+    yield accum_start_index
 
 
 # initialises the word boundaries completely randomly, i.e. a number of word
@@ -76,7 +77,7 @@ def gather_bigram_phon_probs(data, boundary_prob):
                 return bigram_probs[phon_bigram]
 
     def bigram_seq_prob(seq):
-        seq_bigrams = list((seq[i-1], seq[i]) if i > 0 else ('$', seq[0]) for i in range(len(seq)))
+        seq_bigrams = ((seq[i-1], seq[i]) if i > 0 else ('$', seq[0]) for i in range(len(seq)))
         p = prod((phoneme_prob(bigram) for bigram in seq_bigrams))
 
         p *= boundary_prob*(1-boundary_prob)**(len(seq)-1)

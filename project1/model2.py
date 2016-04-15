@@ -38,6 +38,8 @@ class WordSegmenter:
 
         prob_dict = {}
 
+        num_boundaries = len(B)
+
 
         pr = cProfile.Profile()
 
@@ -47,31 +49,43 @@ class WordSegmenter:
 
         start_time = time.time()
 
-        last_index = 0
-
         U = self.U
         corpus = self.corpus
 
         # Initialize wordcounts
         wordcounts = get_words_counts(corpus, B)
 
+        B = set(B)
 
+        print('its in', len(corpus) in B)
+
+        B = [1 if i in B else 0 for i in range(len(corpus)+1)]
+
+        get_next_bound = lambda pos: next(i for i in range(pos, len(B)) if B[i] == 1)
+
+        get_prev_bound = lambda pos: next(i for i in range(pos, -1, -1) if B[i] == 1)
 
         for t in range(num_iter):
             # Remove first word and (occasionally) all nonpositive ones
-            wordcounts[corpus[:B[1]]] -= 1 
+            wordcounts[corpus[:get_next_bound(1)]] -= 1
             if (t % 20) == 0: 
                 wordcounts += Counter()
             b_prev_index = 0
             
             for b_cur in range(1,len(corpus)+1):
                 # Is b_cur on the boundary?
-                cur_is_on_boundary = (b_cur in B)
+                cur_is_on_boundary = (B[b_cur] == 1)
+
+                # print('B', B[:10])
+                # print('b_cur:', b_cur)
+                # print('previous 1s', [i for i in range(b_cur, -1, -1) if B[i] == 1])
+
 
                 # Previous and next boundaries
-                b_prev = B[b_prev_index]
-                next_index = min(b_prev_index + 1 + int(cur_is_on_boundary), len(B)-1)
-                b_next = B[next_index]
+                b_prev = get_prev_bound(b_cur)
+                # next_index = min(b_prev_index + 1 + int(cur_is_on_boundary), len(B)-1)
+                # print('next bound after pos ', b_cur)
+                b_next = get_next_bound(b_cur)
 
                 # Words/fragments in the focus area
                 w1 = corpus[b_prev:b_next]
@@ -80,7 +94,7 @@ class WordSegmenter:
 
                 # Update wordcounts and #words in context
                 wordcounts[w3] -= int(cur_is_on_boundary)
-                num_words = len(B) - 2 - int(cur_is_on_boundary)
+                num_words = num_boundaries - 2 - int(cur_is_on_boundary)
                             
                 # Always insert boundaries at utterance boundaries ?!?!
                 if b_cur in U:
@@ -146,24 +160,14 @@ class WordSegmenter:
                             wordcounts[w2] += 1
                             b_prev_index += 1
                         else:
-                            # index = B.index(b_cur)
-
-
-
-                            index = [i for i in range(last_index, min(last_index+1000, len(B))) if B[i] == b_cur]
-
-                            if len(index) != 1:
-                                print('WHAT THE FUCK: ', index)
-
-                            # print('b_cur', b_cur, "   b_cur's index", index)
-                            del B[index[0]]
-
-                            last_index = index[0]
+                            B[b_cur] = 0
+                            num_boundaries -= 1
                     elif insert_boundary:
                         # Insert boundary at the right position to keep B ordered
-                        B.insert(b_prev_index + 1, b_cur)
+                        B[b_cur] = 1
                         b_prev_index += 1
                         wordcounts[w2] += 1
+                        num_boundaries += 1
 
                 # DEBUGGIN of a SMALL corpus!
                 # This prints the corpus with word boundaries,

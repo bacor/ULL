@@ -29,8 +29,27 @@ def clean_corpus(corpus, sep="$"):
 
     return new_corpus, sorted(set(U))
 
+def add_word_boundaries4(corpus, boundaries, sep="."):
+    return ''.join((sep+c if b == 1 else c for c, b in zip(corpus, boundaries)))
+
 def add_word_boundaries(corpus, boundaries, sep="."):
-    print(boundaries)
+    boundaries = iter(sorted(boundaries))
+    cur_b = boundaries.__next__()
+    out = ""
+
+    for i in range(len(corpus)):
+        if cur_b == i:
+            if not corpus[i] == "$":
+                out += sep
+            try:
+                cur_b = boundaries.__next__()
+            except StopIteration:
+                out += corpus[i:]
+                break
+        out += corpus[i]
+    return out
+
+def add_word_boundaries3(corpus, boundaries, sep="."):
     return ''.join([sep+corpus[i] if i in boundaries and corpus[i] != "$"
                                 else corpus[i] for i in range(len(corpus))])
 
