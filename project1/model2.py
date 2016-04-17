@@ -36,6 +36,8 @@ class WordSegmenter:
 
         self.B = B
 
+        self.sample_call_id = 1
+
     def get_next_bound(self, pos):
             return next(i for i in range(pos, len(self.B)) if self.B[i] == 1)
 
@@ -77,12 +79,18 @@ class WordSegmenter:
         # Initialize wordcounts
         wordcounts = get_words_counts(corpus, B)
 
-        print('Start sampling')
+        print('     Start sampling')
 
         for t in range(num_iter):
 
             if (t % 100) == 0:
-                print('<Boundaries at iteration: ', t, '>: ', B)
+                file_name = 'results_training_'+str(self.sample_call_id)+'_iteration_'+str(t)+'.txt'
+                with open(file_name, 'a+') as h:
+                    h.write('<Boundaries at iteration: ')
+                    h.write(str(t))
+                    h.write('>: ')
+                    h.write(str(B))
+                    h.write('\n')
 
             # Remove first word and (occasionally) all nonpositive ones
             wordcounts[corpus[:self.get_next_bound(0)]] -= 1
@@ -112,7 +120,9 @@ class WordSegmenter:
 
 
                 # Always insert boundaries at utterance boundaries
-                if not b_cur in U:
+                if b_cur in U:
+                    insert_boundary = True
+                else:
                     # Counts of words in the focus
                     num_w1 = wordcounts[w1]
                     num_w2 = wordcounts[w2]
@@ -166,20 +176,20 @@ class WordSegmenter:
 
                     insert_boundary = prob_h2 > prob_h1
 
-                    # Update the contexts
-                    if cur_is_on_boundary: 
-                        if insert_boundary:
-                            wordcounts[w2] += 1
-                            b_prev_index += 1
-                        else:
-                            B[b_cur] = 0
-                            num_boundaries -= 1
-                    elif insert_boundary:
-                        # Insert boundary at the right position to keep B ordered
-                        B[b_cur] = 1
-                        b_prev_index += 1
+                # Update the contexts
+                if cur_is_on_boundary:
+                    if insert_boundary:
                         wordcounts[w2] += 1
-                        num_boundaries += 1
+                        b_prev_index += 1
+                    else:
+                        B[b_cur] = 0
+                        num_boundaries -= 1
+                elif insert_boundary:
+                    # Insert boundary at the right position to keep B ordered
+                    B[b_cur] = 1
+                    b_prev_index += 1
+                    wordcounts[w2] += 1
+                    num_boundaries += 1
 
                 # DEBUGGING of a SMALL corpus!
                 # This prints the corpus with word boundaries,
@@ -192,6 +202,17 @@ class WordSegmenter:
 
 
         end_time = time.time() - start_time
+        print('     End sampling')
         print('TIME ELAPSED:', end_time)
+
+
+
+
+        file_name = 'final_results_training_'+str(self.sample_call_id)+'.txt'
+        with open(file_name, 'a+') as h:
+            h.write('<Final boundaries:>')
+            h.write(str(B))
+            h.write('\n\n')
+
 
         return B
