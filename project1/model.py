@@ -84,13 +84,6 @@ class WordSegmenter:
         num_words = sum(wordcounts.values()) - 1
 
         for t in range(num_iter):
-            # out = ""
-            # for i, char in enumerate(corpus):
-            #     if B[i] == 1:  out += "."
-            #     out += char
-            # out += "."
-            # print (out)
-
 
             if (t % 100) == 0:
                 file_name = 'results_training_'+str(self.sample_call_id)+'_iteration_'+str(t)+'.txt'
@@ -128,21 +121,10 @@ class WordSegmenter:
                     wordcounts[w3] = max(0, wordcounts[w3] - 1)
                     num_words -= int((len(B)-1 != b_cur))
 
-                # DEBUGGIN of a SMALL corpus!
-                # This prints the corpus with word boundaries and wordcounts
-                out = ""
-                for i, char in enumerate(corpus):
-                    if i == b_cur:   out += " | "
-                    elif B[i] == 1:  out += "."
-                    out += char
-                out += "."
-
                 # Always insert boundaries at utterance boundaries
                 if b_cur in U:
                     insert_boundary = True
                 else:
-
-
                     # Counts of words in the focus
                     num_w1 = wordcounts[w1]
                     num_w2 = wordcounts[w2]
@@ -233,10 +215,10 @@ if __name__ == '__main__':
     training_no = 2
     avg_word_len = 3
     bound_prob = .5
-    phon_prob = 'bigram'
+    phon_prob = 'uniform'
     
     # should amount to ~2.5h time (each iteration takes roughly 0.86 secs on Valentin's machine)
-    num_iter = 10
+    num_iter = 1
 
     # CHANGE THIS TO -1 FOR ALL UTTERANCES
     num_utterances = -1
