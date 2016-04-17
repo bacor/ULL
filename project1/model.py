@@ -14,7 +14,7 @@ class WordSegmenter:
 
         self.corpus = read_data(corpus_file)
         self.corpus = self.corpus[:N]
-        # self.corpus = "helloworld$hereisanicestory$helloworldnostorypleaseworld"*10
+        # self.corpus = "helloworld$hereisanicestory$helloworldnostorypleaseworld"*1
         # self.corpus = self.corpus.split("$")
 
         if phon_prob == 'uniform':
@@ -26,22 +26,25 @@ class WordSegmenter:
         else:
             raise ValueError('Phoneme probability measure must be one of: uniform, unigram, bigram.')
 
+        B = set(initialise_poisson(self.corpus, avg_word_length))
+
         self.P0 = P0
         self.corpus = '$'.join((line for line in self.corpus))
         self.corpus, self.U = clean_corpus(self.corpus)
         
         # B = set([5, 10, 12, 17, 25, 31, 36, 49]) #DEMO
-        B = set(initialise_poisson(self.corpus, avg_word_length))
         B |= set(self.U)
         B = [1 if i in B else 0 for i in range(len(self.corpus)+1)]
         self.B = B
 
         self.sample_call_id = 1
-
         self.clean_dictionary_freq = 100
 
     def get_next_bound(self, pos):
+        try:
             return next(i for i in range(min(pos, len(self.B)-1), len(self.B)) if self.B[i] == 1)
+        except StopIteration:
+            return len(self.B)-1
 
     def get_prev_bound(self, pos):
         return next((i for i in range(pos, -1, -1) if self.B[i] == 1))
@@ -81,6 +84,13 @@ class WordSegmenter:
         num_words = sum(wordcounts.values()) - 1
 
         for t in range(num_iter):
+            # out = ""
+            # for i, char in enumerate(corpus):
+            #     if B[i] == 1:  out += "."
+            #     out += char
+            # out += "."
+            # print (out)
+
 
             if (t % 100) == 0:
                 file_name = 'results_training_'+str(self.sample_call_id)+'_iteration_'+str(t)+'.txt'
@@ -92,52 +102,47 @@ class WordSegmenter:
                     h.write('\n')
 
             # Remove first word and (occasionally) all nonpositive ones
+            # Maybe this is wrong?
             wordcounts[corpus[:self.get_next_bound(1)]] -= 1
+
             if (t % self.clean_dictionary_freq) == 0:
                 wordcounts += Counter()
-            
-            b_prev_index = 0
+
             b_prev = 0
+            # print ("\n\nNEW LOOP OVER CORPUS")
             for b_cur in range(1,len(corpus)+1):
 
                 # Is b_cur on the boundary?
                 cur_is_on_boundary = (B[b_cur] == 1)
 
                 # Previous and next boundaries
-                # b_prev = self.get_prev_bound(b_cur)
                 b_next = self.get_next_bound(b_cur + int(cur_is_on_boundary))
 
-                t2 = time.time()
                 # Words/fragments in the focus area
                 w1 = corpus[b_prev:b_next]
                 w2 = corpus[b_prev:b_cur]
                 w3 = corpus[b_cur:b_next]
 
                 # Update wordcounts and #words in context
-                # wordcounts[w3] -= int(cur_is_on_boundary)
                 if cur_is_on_boundary:
                     wordcounts[w3] = max(0, wordcounts[w3] - 1)
                     num_words -= int((len(B)-1 != b_cur))
 
                 # DEBUGGIN of a SMALL corpus!
                 # This prints the corpus with word boundaries and wordcounts
-                # out = ""
-                # for i, char in enumerate(corpus):
-                #     if i == b_cur:   out += " | "
-                #     elif B[i] == 1:  out += "."
-                #     out += char
-                # out += "."
-                # context = ["%s(%s)" % (w,i) for w, i in wordcounts.items() if i>0]
-                # posstr = str(b_cur).zfill(3)
-                # print("\n%s) Counts: %s" % (posstr, " ".join(context)))
-                # print(  "%s) %s" % (posstr, out))        
-                # print(  "%s) W1: %s; W2: %s; W3: %s" % (posstr,w1, w2, w3))
-                # print(num_words, sum(wordcounts.values()))
+                out = ""
+                for i, char in enumerate(corpus):
+                    if i == b_cur:   out += " | "
+                    elif B[i] == 1:  out += "."
+                    out += char
+                out += "."
 
                 # Always insert boundaries at utterance boundaries
                 if b_cur in U:
                     insert_boundary = True
                 else:
+
+
                     # Counts of words in the focus
                     num_w1 = wordcounts[w1]
                     num_w2 = wordcounts[w2]
@@ -162,7 +167,7 @@ class WordSegmenter:
 
                     # Probability of not inserting a boundary
                     prob_h1  = (num_w1 + alpha * p0_w1) / (num_words + alpha)
-                    prob_h1 *= (num_u + rho/2) / (num_words + rho)
+                    prob_h1 *= (num_u + rho/2.0) / (num_words + rho)
 
                     # if the probability for this sequence has already
                     # been computed - retrieve it from the dictionary
@@ -182,14 +187,18 @@ class WordSegmenter:
                         p0_w3 = P0(w3)
                         prob_dict[w3] = p0_w3
 
+                    # print(b_cur, num_w1, num_w2, num_w3, alpha, num_u, total_num_u, rho, w1_is_final)
                     # Prob of inserting a boundary
                     prob_h2  = ((num_w2 + alpha * p0_w2) / (num_words + alpha)
-                                * (num_words - total_num_u + rho/2) / (num_words + rho))
-                    prob_h2 *= ((num_w3 + int(w2 == w3) + alpha * p0_w3) / (num_words + 1 + alpha)
-                                * (num_u + (1 - w1_is_final) + rho/2) / (num_words + 1 + rho))
+                                * (num_words - total_num_u + rho/2.0) / (num_words + rho))
+                    prob_h2 *= ((num_w3 + float(w2 == w3) + alpha * p0_w3) / (num_words + 1.0 + alpha)
+                                * (num_u + (1.0 - w1_is_final) + rho/2.0) / (num_words + 1.0 + rho))
                                 # using (1-w1_is_final) = int(w2_is_final == w1_is_final)
 
-                    insert_boundary = prob_h2 > prob_h1
+                    # Now BLOODY SAMPLE from the FUCKING DISTRIBUTION OVER H1 AND 2.
+                    # Yes.
+                    prob =  prob_h2 / (prob_h1 + prob_h2)
+                    insert_boundary = bool(np.random.binomial(1, prob))# (prob_h2 > prob_h1)
 
                 # Update wordcounts
                 if insert_boundary:
@@ -202,6 +211,7 @@ class WordSegmenter:
                 else:
                     B[b_cur] = 0
 
+    
         self.wordcounts = wordcounts + Counter()          
         end_time = time.time() - start_time
         print('     End sampling')
@@ -221,19 +231,21 @@ if __name__ == '__main__':
     file_name = "data" + os.path.sep + "br-phono-train.txt"
 
     training_no = 2
-    avg_word_len, bound_prob, phon_prob = 3, 0.5, 'uniform'
+    avg_word_len = 3
+    bound_prob = .5
+    phon_prob = 'bigram'
     
     # should amount to ~2.5h time (each iteration takes roughly 0.86 secs on Valentin's machine)
-    num_iter = 5000
+    num_iter = 10
 
-    
     # CHANGE THIS TO -1 FOR ALL UTTERANCES
-    num_utterances = 10
+    num_utterances = -1
     W = WordSegmenter(file_name, avg_word_len, bound_prob, phon_prob, N=num_utterances)
     W.sample_call_id = training_no
     
     # fixed - paper says they're the best parameters
-    alpha, rho = 50, 2    
+    alpha = 20
+    rho = 2
     B = W.sample(num_iter, alpha, rho)
     # B_new = [i for i, b in enumerate(B) if b == 1]
     

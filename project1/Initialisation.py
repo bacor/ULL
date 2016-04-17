@@ -36,14 +36,16 @@ def initialise_poisson(data, word_length_factor):
 # initialises the word boundaries completely randomly, i.e. a number of word
 # boundaries in the utterance is taken from a uniform distribution and then
 # this many indices are randomly drawn
-def initialise_random(data):
+def initialise_random(data, bla):
     accum_start_index = 1
     for line in data:
         num_boundaries = random.randint(0, len(line)-1)
+        num_boundaries = math.floor(max(0, min(len(line)-1, num_boundaries)))
         boundary_indices = random.sample(range(accum_start_index, accum_start_index+len(line)-1), int(num_boundaries))
         accum_start_index += len(line)
         for i in boundary_indices:
             yield i
+    yield accum_start_index
 
 # randomly generate word boundary with probability inversely proportional to bigram probability of
 # the two surrounding phonemes, i.e. the lower p(phon2|phon1), the higher the probability of a word boundary
