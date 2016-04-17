@@ -140,6 +140,7 @@ class WordSegmenter:
 
                     insert_boundary = prob_h2 > prob_h1            
 
+# < <<<<<< Updated upstream
                     # Update the contexts
                     if cur_is_on_boundary: 
                         if insert_boundary:
@@ -163,7 +164,22 @@ class WordSegmenter:
                         # Insert boundary at the right position to keep B ordered
                         B.insert(b_prev_index + 1, b_cur)
                         b_prev_index += 1
+# # = ======
+#                 # Update the contexts
+#                 if cur_is_on_boundary: 
+#                     if insert_boundary:
+# > >>>>>> Stashed changes
                         wordcounts[w2] += 1
+                        b_prev_index += 1
+                    else:
+                        index = B.index(b_cur)
+                        del B[index]
+
+                elif insert_boundary:
+                    # Insert boundary at the right position to keep B ordered
+                    B.insert(b_prev_index + 1, b_cur)
+                    b_prev_index += 1
+                    wordcounts[w2] += 1
 
                 # DEBUGGIN of a SMALL corpus!
                 # This prints the corpus with word boundaries,
