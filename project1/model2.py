@@ -226,10 +226,13 @@ if __name__ == '__main__':
     # should amount to ~2.5h time (each iteration takes roughly 0.86 secs on Valentin's machine)
     num_iter = 5000
 
-    # fixed - paper says they're the best parameters
-    W = WordSegmenter(file_name, avg_word_len, bound_prob, phon_prob, N=10)
+    
+    # CHANGE THIS TO -1 FOR ALL UTTERANCES
+    num_utterances = 10
+    W = WordSegmenter(file_name, avg_word_len, bound_prob, phon_prob, N=num_utterances)
     W.sample_call_id = training_no
-
+    
+    # fixed - paper says they're the best parameters
     alpha, rho = 50, 2    
     B = W.sample(num_iter, alpha, rho)
     # B_new = [i for i, b in enumerate(B) if b == 1]
