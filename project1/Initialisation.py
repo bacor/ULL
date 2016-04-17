@@ -26,7 +26,7 @@ def initialise_poisson(data, word_length_factor):
     for line in data:
         num_boundaries = np.random.poisson(len(line)/word_length_factor)
         num_boundaries = math.floor(max(0, min(len(line)-1, num_boundaries)))
-        boundary_indices = random.sample(range(accum_start_index, accum_start_index+len(line)-1), num_boundaries)
+        boundary_indices = random.sample(range(accum_start_index, accum_start_index+len(line)-1), int(num_boundaries))
         accum_start_index += len(line)
         for i in boundary_indices:
             yield i
@@ -40,7 +40,7 @@ def initialise_random(data):
     accum_start_index = 1
     for line in data:
         num_boundaries = random.randint(0, len(line)-1)
-        boundary_indices = random.sample(range(accum_start_index, accum_start_index+len(line)-1), num_boundaries)
+        boundary_indices = random.sample(range(accum_start_index, accum_start_index+len(line)-1), int(num_boundaries))
         accum_start_index += len(line)
         for i in boundary_indices:
             yield i

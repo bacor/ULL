@@ -1,10 +1,11 @@
 from helpers import *
 from Initialisation import *
+import os
 
 class WordSegmenter:
     """WordSegmenter class implements the model"""
 
-    def __init__(self, corpus_file, avg_word_length, boundary_prob, phon_prob='uniform'):
+    def __init__(self, corpus_file, avg_word_length, boundary_prob, phon_prob='uniform', N=-1):
         """Initialize the class
 
         Args:
@@ -12,6 +13,9 @@ class WordSegmenter:
         """
 
         self.corpus = read_data(corpus_file)
+        self.corpus = self.corpus[:N]
+        # self.corpus = "helloworld$hereisanicestory$helloworldnostorypleaseworld"*10
+        # self.corpus = self.corpus.split("$")
 
         if phon_prob == 'uniform':
             P0 = gather_uniform_phon_probs(self.corpus, boundary_prob)
@@ -23,23 +27,21 @@ class WordSegmenter:
             raise ValueError('Phoneme probability measure must be one of: uniform, unigram, bigram.')
 
         self.P0 = P0
-
-        B = set(initialise_poisson(self.corpus, avg_word_length))
-
         self.corpus = '$'.join((line for line in self.corpus))
-
         self.corpus, self.U = clean_corpus(self.corpus)
-
+        
+        # B = set([5, 10, 12, 17, 25, 31, 36, 49]) #DEMO
+        B = set(initialise_poisson(self.corpus, avg_word_length))
         B |= set(self.U)
-
         B = [1 if i in B else 0 for i in range(len(self.corpus)+1)]
-
         self.B = B
 
         self.sample_call_id = 1
 
+        self.clean_dictionary_freq = 100
+
     def get_next_bound(self, pos):
-            return next(i for i in range(pos, len(self.B)) if self.B[i] == 1)
+            return next(i for i in range(min(pos, len(self.B)-1), len(self.B)) if self.B[i] == 1)
 
     def get_prev_bound(self, pos):
         return next((i for i in range(pos, -1, -1) if self.B[i] == 1))
@@ -59,13 +61,11 @@ class WordSegmenter:
 
         """
         import time
+        print('     Start sampling')
 
         prob_dict = {}
 
         B = self.B
-
-        num_boundaries = sum(B) - 2
-
         P0 = self.P0
 
         start_time = time.time()
@@ -78,8 +78,7 @@ class WordSegmenter:
 
         # Initialize wordcounts
         wordcounts = get_words_counts(corpus, B)
-
-        print('     Start sampling')
+        num_words = sum(wordcounts.values()) - 1
 
         for t in range(num_iter):
 
@@ -93,20 +92,20 @@ class WordSegmenter:
                     h.write('\n')
 
             # Remove first word and (occasionally) all nonpositive ones
-            wordcounts[corpus[:self.get_next_bound(0)]] -= 1
-            if (t % 20) == 0:
+            wordcounts[corpus[:self.get_next_bound(1)]] -= 1
+            if (t % self.clean_dictionary_freq) == 0:
                 wordcounts += Counter()
+            
             b_prev_index = 0
-
-
+            b_prev = 0
             for b_cur in range(1,len(corpus)+1):
 
                 # Is b_cur on the boundary?
                 cur_is_on_boundary = (B[b_cur] == 1)
 
                 # Previous and next boundaries
-                b_prev = self.get_prev_bound(b_cur)
-                b_next = self.get_next_bound(b_cur)
+                # b_prev = self.get_prev_bound(b_cur)
+                b_next = self.get_next_bound(b_cur + int(cur_is_on_boundary))
 
                 t2 = time.time()
                 # Words/fragments in the focus area
@@ -115,9 +114,25 @@ class WordSegmenter:
                 w3 = corpus[b_cur:b_next]
 
                 # Update wordcounts and #words in context
-                wordcounts[w3] -= int(cur_is_on_boundary)
-                num_words = num_boundaries - 2 - int(cur_is_on_boundary)
+                # wordcounts[w3] -= int(cur_is_on_boundary)
+                if cur_is_on_boundary:
+                    wordcounts[w3] = max(0, wordcounts[w3] - 1)
+                    num_words -= int((len(B)-1 != b_cur))
 
+                # DEBUGGIN of a SMALL corpus!
+                # This prints the corpus with word boundaries and wordcounts
+                # out = ""
+                # for i, char in enumerate(corpus):
+                #     if i == b_cur:   out += " | "
+                #     elif B[i] == 1:  out += "."
+                #     out += char
+                # out += "."
+                # context = ["%s(%s)" % (w,i) for w, i in wordcounts.items() if i>0]
+                # posstr = str(b_cur).zfill(3)
+                # print("\n%s) Counts: %s" % (posstr, " ".join(context)))
+                # print(  "%s) %s" % (posstr, out))        
+                # print(  "%s) W1: %s; W2: %s; W3: %s" % (posstr,w1, w2, w3))
+                # print(num_words, sum(wordcounts.values()))
 
                 # Always insert boundaries at utterance boundaries
                 if b_cur in U:
@@ -176,37 +191,21 @@ class WordSegmenter:
 
                     insert_boundary = prob_h2 > prob_h1
 
-                # Update the contexts
-                if cur_is_on_boundary:
-                    if insert_boundary:
-                        wordcounts[w2] += 1
-                        b_prev_index += 1
-                    else:
-                        B[b_cur] = 0
-                        num_boundaries -= 1
-                elif insert_boundary:
-                    # Insert boundary at the right position to keep B ordered
-                    B[b_cur] = 1
-                    b_prev_index += 1
+                # Update wordcounts
+                if insert_boundary:
                     wordcounts[w2] += 1
-                    num_boundaries += 1
+                    num_words += 1
+                    B[b_cur] = 1
 
-                # DEBUGGING of a SMALL corpus!
-                # This prints the corpus with word boundaries,
-                # corpus2 = add_word_boundaries(corpus, sorted(B))
-                # new_B = [b+i for i,b in enumerate(B)]
-                # new_b_cur = b_cur + len([b for b in B if b < b_cur])
-                # next_context = ["%s(%s)" % (w,i) for w, i in wordcounts.items() if i>0]
-                # print(("\n%s) " % b_cur) + corpus2[:new_b_cur] + ' | ' + corpus2[new_b_cur:])
-                # print("Next context: " + " ".join(next_context))
+                    # (*) Save previous boundary position and whether it is in U
+                    b_prev = b_cur
+                else:
+                    B[b_cur] = 0
 
-
+        self.wordcounts = wordcounts + Counter()          
         end_time = time.time() - start_time
         print('     End sampling')
         print('TIME ELAPSED:', end_time)
-
-
-
 
         file_name = 'final_results_training_'+str(self.sample_call_id)+'.txt'
         with open(file_name, 'a+') as h:
@@ -214,5 +213,24 @@ class WordSegmenter:
             h.write(str(B))
             h.write('\n\n')
 
-
         return B
+
+
+
+if __name__ == '__main__':
+    file_name = "data" + os.path.sep + "br-phono-train.txt"
+
+    training_no = 2
+    avg_word_len, bound_prob, phon_prob = 3, 0.5, 'uniform'
+    
+    # should amount to ~2.5h time (each iteration takes roughly 0.86 secs on Valentin's machine)
+    num_iter = 5000
+
+    # fixed - paper says they're the best parameters
+    W = WordSegmenter(file_name, avg_word_len, bound_prob, phon_prob, N=10)
+    W.sample_call_id = training_no
+
+    alpha, rho = 50, 2    
+    B = W.sample(num_iter, alpha, rho)
+    # B_new = [i for i, b in enumerate(B) if b == 1]
+    
