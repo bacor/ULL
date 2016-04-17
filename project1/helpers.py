@@ -29,48 +29,19 @@ def clean_corpus(corpus, sep="$"):
 
     return new_corpus, sorted(set(U))
 
-def add_word_boundaries4(corpus, boundaries, sep="."):
-    return ''.join((sep+c if b == 1 else c for c, b in zip(corpus, boundaries)))
-
+# operates on binary list
 def add_word_boundaries(corpus, boundaries, sep="."):
-    boundaries = iter(sorted(boundaries))
-    cur_b = boundaries.__next__()
-    out = ""
-
-    for i in range(len(corpus)):
-        if cur_b == i:
-            if not corpus[i] == "$":
-                out += sep
-            try:
-                cur_b = boundaries.__next__()
-            except StopIteration:
-                out += corpus[i:]
-                break
-        out += corpus[i]
-    return out
-
-def add_word_boundaries3(corpus, boundaries, sep="."):
-    return ''.join([sep+corpus[i] if i in boundaries and corpus[i] != "$"
-                                else corpus[i] for i in range(len(corpus))])
-
-def add_word_boundaries2(corpus, boundaries, sep="."):
-    """Adds word boundaries to a corpus by inserting a sepator at every boundary
-    """
-    out = ""
-    prev_b = 0
-    for b in boundaries:
-        out += corpus[prev_b:b] + sep
-        prev_b = b
-    return out
+    return ''.join((sep+c if b == 1 else c for c, b in zip(corpus, boundaries)))
 
 def get_words_counts(corpus, boundaries):
     """Counts all words in a corpus given the word boundaries"""
     counts = Counter()
-    prev_b = boundaries[0] # always equals 0
-    for b in boundaries[1:]:
-        word = corpus[prev_b:b]
-        counts[word] += 1
-        prev_b = b
+    cur_w = ""
+    for i in range(1, len(boundaries)):
+        cur_w += corpus[i-1]
+        if boundaries[i] == 1:
+            counts[cur_w] += 1
+            cur_w = ""
     return counts    
 
 def read_data(filename):

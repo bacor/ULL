@@ -96,7 +96,6 @@ def gather_unigram_phon_probs(data, boundary_prob):
         p = prod((unigram_probs[phon] for phon in seq))
         p *= boundary_prob*(1-boundary_prob)**(len(seq)-1)
         return p
-
     return unigram_seq_prob
 
 
