@@ -1,5 +1,5 @@
 
-from model2 import *
+from model import *
 import os
 
 
