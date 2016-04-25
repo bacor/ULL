@@ -1,23 +1,22 @@
 import sys
 import argparse
-from itertools import izip
 
 #Compute precision
 def precision(correct, all_found, s):
 	p = (correct * 1.0 / all_found * 1.0)*100
-	print "Precision of " + s+ ': '+ str(p)
+	print ("Precision of " + s+ ': '+ str(p))
 	return p
 
 #Compute recall
 def recall(correct, all_correct, s):
 	r = (correct * 1.0 / all_correct * 1.0)*100
-	print "Recall of " + s + ': '+ str(r)
+	print ("Recall of " + s + ': '+ str(r))
 	return r
 	
 #Compute fscore
 def f_score(precision, recall,s):
 	f = (2 * precision * recall * 1.0/ (precision + recall)*1.0 )
-	print 'F-score of ' + s  + ': '+ str(f) 
+	print ('F-score of ' + s  + ': '+ str(f))
 
 #Compute precision, recall, fscore for words (both word boundaries must be correctly identified to count as correct)
 def eval_words(file1, file2):
@@ -27,7 +26,7 @@ def eval_words(file1, file2):
 	correct = 0
 	file2 = open(file2, 'r')
 	#Analysis of both file line by line
-	for line1, line2 in izip(file1, file2):
+	for line1, line2 in zip(file1, file2):
 		#The lines are turned into a list representation where each charachter is assigned to 1 when it is followed by a word boundaries (i.e. space), 0 otherwise
 		#the lists has a boundaries at the beginning (start boundary of the first word)
 		boundaries_1 = [1]
@@ -54,12 +53,12 @@ def eval_words(file1, file2):
 			i = i + 1	
 		#Check whether both boundaries are respected 		
 		j = 0
-		while j < len(boundaries_1):
+		while j < len(boundaries_1) and j < len(boundaries_2):
 			if boundaries_1[j] == 1 and boundaries_2[j] == 1:
 					i = j + 1
-					while i < len(boundaries_1) and boundaries_1[i]== 0 and boundaries_2[i] == 0:
+					while i < len(boundaries_1) and i < len(boundaries_2) and boundaries_1[i]== 0 and boundaries_2[i] == 0:
 						i = i + 1
-					if i < len(boundaries_1):
+					if i < len(boundaries_1) and i < len(boundaries_2):
 						if boundaries_2[i] == boundaries_1[i] and boundaries_2[i] == 1:
 							correct = correct + 1
 							j = i	
@@ -123,7 +122,7 @@ def eval_boundaries(file1, file2):
 	all_found = 0
 	all_correct = 0
 	#Analysis of files line by line
-	for line1, line2 in izip(file1, file2):
+	for line1, line2 in zip(file1, file2):
 		#The lines are turned into a list such that each charachter is assigned 1 if it is followed by a word boundary, 0 otherwise
 		boundaries_1 = []
 		i = 0
