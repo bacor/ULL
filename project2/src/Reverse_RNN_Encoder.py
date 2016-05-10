@@ -1,4 +1,4 @@
-from Get_Input_Reverse import process_corpus, corpus_to_mats
+from Get_Input_Reverse import process_corpus, corpus_to_vecs
 
 import theano
 import theano.tensor as T
@@ -101,11 +101,11 @@ if __name__ == '__main__':
 
     corpus = process_corpus(file)
 
-    corpus = corpus_to_mats(corpus)
+    corpus, word_indices = corpus_to_vecs(corpus)
 
-    test_text = corpus.next()
+    # test_text = corpus.next()
 
-    vocab_size = len(test_text[0])
+    vocab_size = len(corpus[0][0])
 
     ####
 
@@ -131,10 +131,9 @@ if __name__ == '__main__':
 
     net_pass = theano.function(inputs=[sym_sent], outputs=[sym_output])
 
-
-    result = net_pass(test_text)
-
-    print(result)
+    for sent in corpus[:10]:
+        result = net_pass(sent)
+        print(result)
 
 
 

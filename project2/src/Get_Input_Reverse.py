@@ -57,13 +57,23 @@ def process_corpus(filename):
     yield Story(story_ls)
 
 
-# turns the texts in a corpus (a list of Story objects)
-# into matrices with the same number one-hot vectors
-# rtype: generator over
-# numpy arrays of dim V x len(sentence)
-def corpus_to_mats(corpus):
+# prepares a corpus for input into
+# an ANN by turning its texts into arrays
+# of one-hot vectors
+# rtype: tuple of:
+#  - list of sentences transformed into arrays of one-hot vectors
+#  - Dict[str, int] with the index given to each word in the vocabulary
+def corpus_to_vecs(corpus):
     corpus = list(corpus)
-    vocab_inds = vocab_to_indices(corpus)
+    vocab_indices = vocab_to_indices(corpus)
+    return list(get_text_mats(corpus, vocab_indices)), vocab_indices
+
+
+# turns the texts in a corpus (a list of Story objects)
+# into list of one-hot vectors
+# rtype: generator over
+# numpy arrays of dim len(sentence) x V
+def get_text_mats(corpus, vocab_inds):
     for story in corpus:
         for text in story:
             text_mat = np.asarray(list(text_to_mat(text, vocab_inds)))
