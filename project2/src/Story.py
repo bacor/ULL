@@ -2,8 +2,10 @@ from nltk.tokenize import word_tokenize
 
 class Story:
 
-    def __init__(self, sent_quest_list):        
+    def __init__(self, sent_quest_list):
+        self.story = sent_quest_list
         self.raw_texts = list(self.get_raw_text(sent_quest_list))
+        self.statements = list(self.get_statements(sent_quest_list))
         self.questions = list(self.get_questions(sent_quest_list))
         self.answers = list(self.get_answers(sent_quest_list))
 
@@ -11,11 +13,16 @@ class Story:
         for item in sent_quest_list:
             yield item.text
 
+    def get_statements(self, sent_quest_list):
+        for item in sent_quest_list:
+            if not item.is_question:
+                yield item
+
     def get_questions(self, sent_quest_list):
         for item in sent_quest_list:
             if item.is_question:
                 yield item.text
-                
+
     def get_answers(self, sent_quest_list):
         for item in sent_quest_list:
             if item.is_question:
@@ -29,11 +36,11 @@ class Story:
         return self
 
     def __next__(self):
-    	if self.iterator_state == self.max_iter:
-    		raise StopIteration
-    	else:
-    		self.iterator_state += 1
-    	return self.raw_texts[self.iterator_state-1]
+        if self.iterator_state == self.max_iter:
+            raise StopIteration
+        else:
+            self.iterator_state += 1
+        return self.raw_texts[self.iterator_state-1]
     # returns the next raw text in the story
     # and updates the current index
     # stops iterating when the end of the story is reached
@@ -53,7 +60,7 @@ class Question:
             text = word_tokenize(text)
         self.text = text
         self.answer = answer
-	#list of supporting facts
+        #list of supporting facts
         self.answer_id = support_fact_id
         self.is_question = True
 

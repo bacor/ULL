@@ -92,8 +92,10 @@ def get_text_mats(corpus, vocab_inds):
 def text_to_mat(text, vocab_inds):
     vocab_size = len(vocab_inds)
 
+    yield [1 if vocab_inds['<SOL>'] == i else 0 for i in range(vocab_size)]
     for word in text:
         yield [1 if vocab_inds[word] == i else 0 for i in range(vocab_size)]
+    yield [1 if vocab_inds['<EOL>'] == i else 0 for i in range(vocab_size)]
 
 
 # assigns each word in the corpus and index
@@ -107,6 +109,8 @@ def vocab_to_indices(corpus):
                 if not word in indices:
                     indices[word] = index
                     index += 1
+    indices['<SOL>'] = index
+    indices['<EOL>'] = index + 1
     return indices
 
 
