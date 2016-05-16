@@ -33,22 +33,29 @@ def read_corpus_file(filename):
 
 
 def process_corpus(filename):
-    corpus = read_corpus_file(filename)
-    question_pattern = re.compile('(\d|\d\d) (.+\?) \t(.+)\t(\d|\d\d)')
+    corpus = read_corpus_file(filename,)
+    #question_pattern = re.compile('(\d+) (.+\?) ?\t(.+|.+,.+)\t(\d+|\d+\s\d+|\d+\s\d+\s\d+|\d+\s\d+\s\d+\s\d+|\d+\s\d+\s\d+\s\d+\s\d+|\d+\s\d+\s\d+\s\d+\s\d+\s\d+|\d+\s\d+\s\d+\s\d+\s\d+\s\d+\s\d+)\n')
+    question_pattern = re.compile('(\d+) (.+\?) ?\t(.+)\t(.+)\n')
+    pattern2 = re.compile('(\d+) (.+\?)\t')
     group_range = (1, 5)
-
     story_ls = []
 
     for line in corpus:
         match_obj = question_pattern.match(line)
         if match_obj:
             groups = [match_obj.group(i) for i in range(*group_range)]
-            question_contents = int(groups[0]), groups[1], groups[2], int(groups[3])
+            dig = groups[3].split(' ')
+            i = 0
+            while i < len(dig):
+                dig[i] = int(dig[i].strip('\n'))
+                i += 1
+            question_contents = int(groups[0]), groups[1], groups[2], dig
             q = Question(*question_contents)
+            #print(q.answer_id)
             story_ls.append(q)
         else:
             id_len = line.index(' ')
-            statement_contents = int(line[:id_len]), line[id_len+1:-1]
+            statement_contents = int(line[:id_len]), line[id_len + 1:-1]
             s = Statement(*statement_contents)
             if statement_contents[0] == 1 and not story_ls == []:
                 yield Story(story_ls)
@@ -107,36 +114,3 @@ def reversed_corpus(text_mats):
     for mat in text_mats:
         yield mat[::-1]
 
-
-if __name__ == '__main__':
-    # file = 'Data/en/qa1_single-supporting-fact_test.txt'
-    #
-    # import os
-    #
-    # data_dir = 'Data/en/'
-    #
-    # file_exp = re.compile('qa[1-5]_.+_train\.txt')
-    #
-    # for file in os.listdir(data_dir):
-    #     if file_exp.match(file):
-    #         print('file:', file)
-    #         c = process_corpus(data_dir+file)
-
-
-    file = 'Data/en/qa1_single-supporting-fact_test.txt'
-
-    c = list(process_corpus(file))
-
-    texts_mats = list(corpus_to_mats(c))
-
-    print(texts_mats[0])
-
-    print(texts_mats[-1])
-
-    print('-----------------')
-
-    reversed_texts_mats = list(reversed_corpus(texts_mats))
-
-    print(reversed_texts_mats[0])
-
-    print(reversed_texts_mats[-1])

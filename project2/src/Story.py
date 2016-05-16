@@ -19,7 +19,7 @@ class Story:
     def get_answers(self, sent_quest_list):
         for item in sent_quest_list:
             if item.is_question:
-                yield item.answer, self.raw_texts[item.answer_id]
+                yield item.answer, [self.raw_texts[i] for i in item.answer_id]
 
     # initialises the iterator
     # with the current index set to 0
@@ -28,7 +28,12 @@ class Story:
         self.max_iter = len(self.raw_texts)
         return self
 
-    # __next__(self) in python 3!
+    def __next__(self):
+    	if self.iterator_state == self.max_iter:
+    		raise StopIteration
+    	else:
+    		self.iterator_state += 1
+    	return self.raw_texts[self.iterator_state-1]
     # returns the next raw text in the story
     # and updates the current index
     # stops iterating when the end of the story is reached
@@ -48,6 +53,7 @@ class Question:
             text = word_tokenize(text)
         self.text = text
         self.answer = answer
+	#list of supporting facts
         self.answer_id = support_fact_id
         self.is_question = True
 

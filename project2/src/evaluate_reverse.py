@@ -2,7 +2,7 @@ import os
 import Story
 from Get_Input_Reverse import read_corpus_file, process_corpus
 from collections import defaultdict
-from random import shuffle
+import random
 
 #Values to collect for the evaluation
 values = {'all_correct_seq': 0,'correct_seq':0,'all_correct_words':0,
@@ -14,12 +14,22 @@ for v in values.keys():
 
 #Collect values for a task (going through all the stories)
 def values_task(test, output):
+	vocab = set()
 	for story_test, story_output in zip(test, output):
 		story_test = story_test.raw_texts
-		story_output = story_output.raw_texts
-		for x,y in zip(story_test, story_output):
+		#story_output = story_output.raw_texts
+		#for y,x in zip(story_test, story_output):
+		for x in story_test:
+			for i in x:
+				vocab.add(i)
+			i = 0
+			y = []
+			while i < random.choice(range(2,10)):
+				y.append(random.choice(list(vocab)))
+				i += 1
+			reversed(y)
 			#x = reverse(x)
-			x = x[::-1]
+			#x = x[::-1]
 			#Same sequence: correct!
 			if x == y:
 				values['correct_seq'][len(x)] += 1
@@ -40,17 +50,26 @@ def values_task(test, output):
 			values['all_found_words'][len(x)] += len(y)
 			#Values for word accuracy			
 			while i < len(y):
-				if y[i] == x[i]:
-					values['correct_words'][len(x)] += 1
-				elif y[i] in x:
-					#Error in word order
-					values['error_words'][len(x)] += 1
-					values['error_order_words'][len(x)] += 1
-					j += 1
-				else:
+				if i < len(x):
+					if y[i] == x[i]:
+						values['correct_words'][len(x)] += 1
+					elif y[i] in x:
+						#Error in word order
+						values['error_words'][len(x)] += 1
+						values['error_order_words'][len(x)] += 1
+						j += 1
+					else:
 					 # A word that is not in y is in x
+						values['error_words'][len(x)] += 1
+						values['error_new_word'][len(x)] += 1
+				else:
 					values['error_words'][len(x)] += 1
-					values['error_new_word'][len(x)] += 1
+					if y[i] in x:
+						#Error in word order
+						values['error_order_words'][len(x)] += 1
+					else:
+					 # A word that is not in y is in x
+						values['error_new_word'][len(x)] += 1
 				i += 1
 			if j == len(x) and j == len(y):
 				# Right words but wrong order
@@ -104,31 +123,58 @@ def evaluate():
 				
 	print ('Accuracy of sequences: ')
 	for x in accuracy_seq.keys():
-		print ('\t Sequence length '+ str(x) + ': ' + str(accuracy_seq[x]))
+		if x == 'All':
+			print ('\t Sequence length '+ str(x) + ' (' + str(sum(values['all_correct_seq'].values())) + '): ' + str(accuracy_seq[x]))
+		else:
+			print ('\t Sequence length '+ str(x) + ' (' + str(values['all_correct_seq'][x]) + '): '  + str(accuracy_seq[x]))
 	print ('Precision of words: ')
 	for x in precision_words.keys():
-		print ('\t Sequence length '+ str(x) + ': ' + str(precision_words[x]))
+		if x == 'All':
+			print ('\t Sequence length '+ str(x) + ' (' + str(sum(values['all_correct_seq'].values())) + '): '+ str(precision_words[x]))
+		else:
+			print ('\t Sequence length '+ str(x) +  ' (' + str(values['all_correct_seq'][x]) + '): ' + str(precision_words[x]))
 	print ('Recall of words: ')
 	for x in recall_words.keys():
-		print ('\t Sequence length '+ str(x) + ': ' + str(recall_words[x]))
+		if x == 'All':
+			print ('\t Sequence length '+ str(x) +  ' (' + str(sum(values['all_correct_seq'].values())) + '): ' + str(recall_words[x]))
+		else:
+			print ('\t Sequence length '+ str(x) +  ' (' + str(values['all_correct_seq'][x]) + '): ' + str(recall_words[x]))
 	print ('F1 score of words: ')
 	for x in f_words.keys():
-		print ('\t Sequence length '+ str(x) + ': ' + str(f_words[x]))
+		if x == 'All':
+			print ('\t Sequence length '+ str(x) +  ' (' + str(sum(values['all_correct_seq'].values())) + '): '+ str(f_words[x]))
+		else:
+			print ('\t Sequence length '+ str(x) +  ' (' + str(values['all_correct_seq'].values()) + '): ' + str(f_words[x]))
 	print ('Percentage of errors for different length: \n')
 	for x in error_length.keys():
-		print ('\t Sequence length '+ str(x) + ': ' + str(error_length[x]))
+		if x == 'All':
+			print ('\t Sequence length '+ str(x) +  ' (' + str(sum(values['all_correct_seq'].values())) + '): ' + str(error_length[x]))
+		else:
+			print ('\t Sequence length '+ str(x) +  ' (' + str(values['all_correct_seq'][x]) + '): ' + str(error_length[x]))
 	print ('Percentage of errors for longer length: ')
 	for x in error_too_long.keys():
-		print ('\t Sequence length '+ str(x) + ': ' + str(error_too_long[x]))
+		if x == 'All':
+			print ('\t Sequence length '+ str(x) +  ' (' + str(sum(values['all_correct_seq'].values())) + '): '+ str(error_too_long[x]))
+		else:		
+			print ('\t Sequence length '+ str(x) +  ' (' + str(values['all_correct_seq'][x]) + '): '+ str(error_too_long[x]))
 	print ('Percentage of errors for shorter length: ')
 	for x in error_too_short.keys():
-		print ('\t Sequence length '+ str(x) + ': ' + str(error_too_short[x]))
+		if x == 'All':
+			print ('\t Sequence length '+ str(x) +  ' (' + str(sum(values['all_correct_seq'].values())) + '): ' + str(error_too_short[x]))
+		else:
+			print ('\t Sequence length '+ str(x) +  ' (' + str(values['all_correct_seq'][x]) + '): ' + str(error_too_short[x]))
 	print ('Percentage of errors for word order (same length): ')
 	for x in error_word_order.keys():
-		print ('\t Sequence length '+ str(x) + ': ' + str(error_word_order[x]))
+		if x == 'All':
+			print ('\t Sequence length '+ str(x) + ' (' + str(sum(values['all_correct_seq'].values())) + '): '+ str(error_word_order[x]))
+		else:
+			print ('\t Sequence length '+ str(x) +  ' (' + str(values['all_correct_seq'][x]) + '): '+ str(error_word_order[x]))
 	print ('Percentage of errors for a new word: ')
 	for x in error_new_word.keys():
-		print ('\t Sequence length '+ str(x) + ': ' + str(error_new_word[x]))
+		if x == 'All':
+			print ('\t Sequence length '+ str(x) +  ' (' + str(sum(values['all_correct_seq'].values())) + '): ' + str(error_new_word[x]))
+		else:
+			print ('\t Sequence length '+ str(x) + ' (' + str(values['all_correct_seq'][x]) +'): ' + str(error_new_word[x]))
 	
 if __name__ == '__main__':
 	reverse_folder = '../data/data_answer/test'
