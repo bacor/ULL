@@ -1,0 +1,59 @@
+Accuracy of sequences: 
+	 Sequence length All (30000): 0.172833333333
+	 Sequence length 5 (897): 1.0
+	 Sequence length 6 (4793): 0.191112038389
+	 Sequence length 7 (15542): 0.162398661691
+	 Sequence length 8 (5947): 0.125609551034
+	 Sequence length 9 (2821): 0.0358029067706
+Precision of words: 
+	 Sequence length All (30000): 0.846601426963
+	 Sequence length 5 (897): 1.0
+	 Sequence length 6 (4793): 0.809270463871
+	 Sequence length 7 (15542): 0.861950107543
+	 Sequence length 8 (5947): 0.850239616613
+	 Sequence length 9 (2821): 0.789200047265
+Recall of words: 
+	 Sequence length All (30000): 0.846601426963
+	 Sequence length 5 (897): 1.0
+	 Sequence length 6 (4793): 0.809270463871
+	 Sequence length 7 (15542): 0.861950107543
+	 Sequence length 8 (5947): 0.850239616613
+	 Sequence length 9 (2821): 0.789200047265
+F1 score of words: 
+	 Sequence length All (30000): 0.846601426963
+	 Sequence length 5 (897): 1.0
+	 Sequence length 6 (4793): 0.809270463871
+	 Sequence length 7 (15542): 0.861950107543
+	 Sequence length 8 (5947): 0.850239616613
+	 Sequence length 9 (2821): 0.789200047265
+Percentage of errors for different length: 
+
+	 Sequence length 8 (5947): 0.0
+	 Sequence length 9 (2821): 0.0
+	 Sequence length All (30000): 0.0
+	 Sequence length 6 (4793): 0.0
+	 Sequence length 7 (15542): 0.0
+Percentage of errors for longer length: 
+	 Sequence length 8 (5947): 0.0
+	 Sequence length 9 (2821): 0.0
+	 Sequence length All (30000): 0.0
+	 Sequence length 6 (4793): 0.0
+	 Sequence length 7 (15542): 0.0
+Percentage of errors for shorter length: 
+	 Sequence length 8 (5947): 0.0
+	 Sequence length 9 (2821): 0.0
+	 Sequence length All (30000): 0.0
+	 Sequence length 6 (4793): 0.0
+	 Sequence length 7 (15542): 0.0
+Percentage of errors for word order (same length): 
+	 Sequence length 8 (5947): 1.06356145956
+	 Sequence length 9 (2821): 2.52471542794
+	 Sequence length All (30000): 0.533483409457
+	 Sequence length 6 (4793): 0.0
+	 Sequence length 7 (15542): 0.0
+Percentage of errors for a new word: 
+	 Sequence length 8 (5947): 13.9124768791
+	 Sequence length 9 (2821): 18.5552798456
+	 Sequence length All (30000): 14.8063738942
+	 Sequence length 6 (4793): 19.0729536129
+	 Sequence length 7 (15542): 13.8049892457

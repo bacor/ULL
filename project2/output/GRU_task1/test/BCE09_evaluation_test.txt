@@ -1,0 +1,59 @@
+Accuracy of sequences: 
+	 Sequence length All (3750): 0.204533333333
+	 Sequence length 5 (111): 1.0
+	 Sequence length 6 (613): 0.256117455139
+	 Sequence length 7 (1971): 0.177574835109
+	 Sequence length 8 (741): 0.187584345479
+	 Sequence length 9 (314): 0.031847133758
+Precision of words: 
+	 Sequence length All (3750): 0.862791218638
+	 Sequence length 5 (111): 1.0
+	 Sequence length 6 (613): 0.834148994018
+	 Sequence length 7 (1971): 0.870769007755
+	 Sequence length 8 (741): 0.873650472335
+	 Sequence length 9 (314): 0.811394196745
+Recall of words: 
+	 Sequence length All (3750): 0.862791218638
+	 Sequence length 5 (111): 1.0
+	 Sequence length 6 (613): 0.834148994018
+	 Sequence length 7 (1971): 0.870769007755
+	 Sequence length 8 (741): 0.873650472335
+	 Sequence length 9 (314): 0.811394196745
+F1 score of words: 
+	 Sequence length All (3750): 0.862791218638
+	 Sequence length 5 (111): 1.0
+	 Sequence length 6 (613): 0.834148994018
+	 Sequence length 7 (1971): 0.870769007755
+	 Sequence length 8 (741): 0.873650472335
+	 Sequence length 9 (314): 0.811394196745
+Percentage of errors for different length: 
+
+	 Sequence length 8 (741): 0.0
+	 Sequence length 9 (314): 0.0
+	 Sequence length All (3750): 0.0
+	 Sequence length 6 (613): 0.0
+	 Sequence length 7 (1971): 0.0
+Percentage of errors for longer length: 
+	 Sequence length 8 (741): 0.0
+	 Sequence length 9 (314): 0.0
+	 Sequence length All (3750): 0.0
+	 Sequence length 6 (613): 0.0
+	 Sequence length 7 (1971): 0.0
+Percentage of errors for shorter length: 
+	 Sequence length 8 (741): 0.0
+	 Sequence length 9 (314): 0.0
+	 Sequence length All (3750): 0.0
+	 Sequence length 6 (613): 0.0
+	 Sequence length 7 (1971): 0.0
+Percentage of errors for word order (same length): 
+	 Sequence length 8 (741): 0.337381916329
+	 Sequence length 9 (314): 2.61854210899
+	 Sequence length All (3750): 0.350955794504
+	 Sequence length 6 (613): 0.0
+	 Sequence length 7 (1971): 0.0
+Percentage of errors for a new word: 
+	 Sequence length 8 (741): 12.2975708502
+	 Sequence length 9 (314): 16.2420382166
+	 Sequence length All (3750): 13.3699223417
+	 Sequence length 6 (613): 16.5851005982
+	 Sequence length 7 (1971): 12.9230992245
