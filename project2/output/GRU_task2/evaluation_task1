@@ -1,0 +1,12 @@
+Accuracy of answers: 
+	 Story length 10 (1000): 0.168
+	 Story length All (1000): 0.168
+	 Task qa1_single-supporting-fact_train.txt (1000): 0.168
+	 Task All (1000): 0.168
+	 Supporting facts 1 (1000): 0.168
+Percentage of wrong answers with words in the stories: 
+	 Story length 10 (1000): 71.2
+	 Story length All (1000): 71.2
+	 Task qa1_single-supporting-fact_train.txt (1000): 71.2
+	 Task All (1000): 71.2
+	 Supporting facts 1 (11000): 71.2
