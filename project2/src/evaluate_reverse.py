@@ -6,74 +6,84 @@ import random
 
 #Values to collect for the evaluation
 values = {'all_correct_seq': 0,'correct_seq':0,'all_correct_words':0,
-			'all_found_words': 0, 'correct_words': 0, 'found_words':0, 'error_words':0, 'error_seq': 0,
-			'error_length':0, 'error_too_short':0, 'error_too_long':0, 'error_order_words':0, 
-			'error_order_sequences':0, 'error_new_word':0}
+		'all_found_words': 0, 'correct_words': 0, 'found_words':0, 'error_words':0, 'error_seq': 0,
+		'error_length':0, 'error_too_short':0, 'error_too_long':0, 'error_order_words':0, 
+		'error_order_sequences':0, 'error_new_word':0}
 for v in values.keys():
 	values[v] = defaultdict(int)
+ac_seq_file = open('accuracy_sequences.txt', 'w')
 
 #Collect values for a task (going through all the stories)
-def values_task(test, output):
+def values_task(dataset, output):
 	vocab = set()
-	for story_test, story_output in zip(test, output):
-		story_test = story_test.raw_texts
+	#for story_test, story_output in zip(test, output):
+	#	story_test = story_test.raw_texts
 		#story_output = story_output.raw_texts
 		#for y,x in zip(story_test, story_output):
-		for x in story_test:
-			for i in x:
-				vocab.add(i)
-			i = 0
-			y = []
-			while i < random.choice(range(2,10)):
-				y.append(random.choice(list(vocab)))
-				i += 1
-			reversed(y)
-			#x = reverse(x)
-			#x = x[::-1]
-			#Same sequence: correct!
-			if x == y:
-				values['correct_seq'][len(x)] += 1
+	#	for x in story_test:
+	for line_dataset, line_output in zip(dataset, output):
+		line_dataset = line_dataset.split()
+		line_output = line_output.split()
+		for i in line_dataset:
+			vocab.add(i)
+		i = 0
+		y = []
+		while i < random.choice(range(2,10)):
+			line_output.append(random.choice(list(vocab)))
+			i += 1
+		#Same sequence: correct!
+		if line_dataset == line_output:
+			values['correct_seq'][len(line_dataset)] += 1
+		else:
+		#Wrong sequence
+			values['error_seq'][len(line_dataset)]+= 1
+		values['all_correct_seq'][len(line_dataset)] += 1
+		#Wron length
+		if len(line_dataset) != len(line_output):
+			values['error_length'][len(line_dataset)] += 1
+			if len(line_dataset) < len(line_output): 
+				values['error_too_long'][len(line_dataset)] += 1
 			else:
-			#Wrong sequence
-				values['error_seq'][len(x)]+= 1
-			values['all_correct_seq'][len(x)] += 1
-			#Wron length
-			if len(x) != len(y):
-				values['error_length'][len(x)] += 1
-				if len(x) < len(y): 
-					values['error_too_long'][len(x)] += 1
+				values['error_too_short'][len(line_dataset)] += 1
+		i = 0
+		j = 0
+		values['all_correct_words'][len(line_dataset)] += len(line_dataset)
+		values['all_found_words'][len(line_dataset)] += len(line_output)
+		#Values for word accuracy
+		correct = 0
+		while i < len(line_output):
+			if i < len(line_dataset):
+				if line_dataset[i] == line_output[i]:
+					values['correct_words'][len(line_dataset)] += 1
+					correct += 1
+				elif line_output[i] in line_dataset:
+					#Error in word order
+					values['error_words'][len(line_dataset)] += 1
+					values['error_order_words'][len(line_dataset)] += 1
+					j += 1
 				else:
-					values['error_too_short'][len(x)] += 1
-			i = 0
-			j = 0
-			values['all_correct_words'][len(x)] += len(x)
-			values['all_found_words'][len(x)] += len(y)
-			#Values for word accuracy			
-			while i < len(y):
-				if i < len(x):
-					if y[i] == x[i]:
-						values['correct_words'][len(x)] += 1
-					elif y[i] in x:
-						#Error in word order
-						values['error_words'][len(x)] += 1
-						values['error_order_words'][len(x)] += 1
-						j += 1
-					else:
-					 # A word that is not in y is in x
-						values['error_words'][len(x)] += 1
-						values['error_new_word'][len(x)] += 1
+				 # A word that is not in y is in x
+					values['error_words'][len(line_dataset)] += 1
+					values['error_new_word'][len(line_dataset)] += 1
+			else:
+				values['error_words'][len(line_dataset)] += 1
+				if line_output[i] in line_dataset:
+					#Error in word order
+					values['error_order_words'][len(line_dataset)] += 1
 				else:
-					values['error_words'][len(x)] += 1
-					if y[i] in x:
-						#Error in word order
-						values['error_order_words'][len(x)] += 1
-					else:
-					 # A word that is not in y is in x
-						values['error_new_word'][len(x)] += 1
-				i += 1
-			if j == len(x) and j == len(y):
-				# Right words but wrong order
-				values['error_order_sequences'][len(x)] += 1
+				 # A word that is not in y is in x
+					values['error_new_word'][len(line_dataset)] += 1
+			i += 1
+			precision = correct*1.0/len(line_dataset)*1.0
+			recall = correct*1.0/len(line_output)*1.0
+			if precision + recall != 0:
+				f_score = 2 * precision *recall/(precision + recall)*1.0
+			else:
+				f_score = 0
+			ac_seq_file.write(str(correct) + '\t' + str(len(line_dataset)) + '\t' + str(precision) + '\t'  + str(recall) + '\t' + str(f_score) + '\n')
+		if j == len(line_output) and j == len(line_dataset):
+			# Right words but wrong order
+			values['error_order_sequences'][len(len_dataset)] += 1
 
 #Computing the final evaluation using the values collected
 def evaluate():
@@ -177,16 +187,19 @@ def evaluate():
 			print ('\t Sequence length '+ str(x) + ' (' + str(values['all_correct_seq'][x]) +'): ' + str(error_new_word[x]))
 	
 if __name__ == '__main__':
-	reverse_folder = '../data/data_answer/test'
-	output_folder = '../data/data_answer/test'
+	#reverse_folder = '../data/data_answer/test'
+	#output_folder = '../data/data_answer/test'
 	# Going through all the tasks in the test set
-	for f in os.listdir(reverse_folder)[:5]:
-		fn_test = os.path.join(reverse_folder, f)
+	#for f in os.listdir(reverse_folder)[:5]:
+	dataset = open('../data/data_answer/test/qa1_single-supporting-fact_test.txt', 'r')
+	output = open('../data/data_answer/test/qa2_two-supporting-facts_test.txt', 'r')
+		#fn_test = os.path.join(reverse_folder, f)
 		#fn_output = os.path.join(output_folder, f)
 		#fn_output = os.path.join(output_folder, f)
 		#fn_output = open(fn_output, 'r')
 		# Collect stories for a task
-		test_stories = list(process_corpus(fn_test))
-		fn_output = test_stories
-		values_task(test_stories, fn_output)
+		#test_stories = list(process_corpus(fn_test))
+		#fn_output = test_stories
+	values_task(dataset, output)
 	evaluate()
+	ac_seq_file.close()
